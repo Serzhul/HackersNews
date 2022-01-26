@@ -1,85 +1,85 @@
 interface Store {
-  currentPage: number;
-  feeds: NewsFeed[];
+    currentPage: number;
+    feeds: NewsFeed[];
 }
 
 interface News {
-  readonly id: number;
-  readonly time_ago: string;
-  readonly title: string;
-  readonly url: string;
-  readonly user: string;
-  readonly content: string;
+    readonly id: number;
+    readonly time_ago: string;
+    readonly title: string;
+    readonly url: string;
+    readonly user: string;
+    readonly content: string;
 }
 
 interface NewsFeed extends News {
-  readonly comments_count: number;
-  readonly points: number;
-  read?: boolean; // optional 속성
+    readonly comments_count: number;
+    readonly points: number;
+    read?: boolean; // optional 속성
 }
 
 interface NewsDetail extends News {
-  readonly comments: NewsComment[];
+    readonly comments: NewsComment[];
 }
 
 interface NewsComment extends News {
-  readonly comments: NewsComment[];
-  readonly level: number;
+    readonly comments: NewsComment[];
+    readonly level: number;
 }
 
-const container: HTMLElement | null = document.getElementById("root");
+const container: HTMLElement | null = document.getElementById('root'); // Union Type
 const ajax: XMLHttpRequest = new XMLHttpRequest(); // let => 다른 값을 할당할 수 있음
-const content = document.createElement("div");
-const NEWS_URL = "https://api.hnpwa.com/v0/news/1.json";
-const CONTENTS_URL = "https://api.hnpwa.com/v0/item/@id.json";
+const content = document.createElement('div');
+const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
+const CONTENTS_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 
 const store: Store = {
-  currentPage: 1,
-  feeds: [],
+    currentPage: 1,
+    feeds: [],
 };
 
 function applyApiMixins(targetClass: any, baseClasses: any[]): void {
-  baseClasses.forEach((baseClass) => {
-    Object.getOwnPropertyNames(baseClass.prototype).forEach((name) => {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        baseClass.prototype,
-        name
-      );
+    baseClasses.forEach((baseClass) => {
+        Object.getOwnPropertyNames(baseClass.prototype).forEach((name) => {
+            const descriptor = Object.getOwnPropertyDescriptor(
+                baseClass.prototype,
+                name
+            );
 
-      if (descriptor) {
-        Object.defineProperty(targetClass.prototype, name, descriptor);
-      }
+            if (descriptor) {
+                Object.defineProperty(targetClass.prototype, name, descriptor);
+            }
+        });
     });
-  });
 }
 
 class Api {
-  getRequest<AjaxResponse>(url: string): AjaxResponse {
-    const ajax = new XMLHttpRequest();
-    ajax.open("GET", url, false);
-    ajax.send();
+    getRequest<AjaxResponse>(url: string): AjaxResponse {
+        const ajax = new XMLHttpRequest();
+        ajax.open('GET', url, false);
+        ajax.send();
 
-    return JSON.parse(ajax.response);
-  }
+        return JSON.parse(ajax.response);
+    }
 }
 
 class NewsFeedApi {
-  getData(): NewsFeed[] {
-    return this.getRequest<NewsFeed[]>(NEWS_URL);
-  }
+    getData(): NewsFeed[] {
+        return this.getRequest<NewsFeed[]>(NEWS_URL);
+    }
 }
 
 class NewsDetailApi {
-  getData(id: string): NewsDetail {
-    return this.getRequest<NewsDetail>(CONTENTS_URL.replace("@id", id));
-  }
+    getData(id: string): NewsDetail {
+        return this.getRequest<NewsDetail>(CONTENTS_URL.replace('@id', id));
+    }
 }
 
 const getData = function <AjaxResponse>(url: string): AjaxResponse {
-  ajax.open("GET", url, false);
-  ajax.send();
+    ajax.open('GET', url, false);
+    ajax.send();
 
-  return JSON.parse(ajax.response);
+    return JSON.parse(ajax.response);
 };
 
 interface NewsFeedApi extends Api {}
@@ -88,30 +88,30 @@ applyApiMixins(NewsFeedApi, [Api]);
 applyApiMixins(NewsDetailApi, [Api]);
 
 const makeFeeds = function (feeds: NewsFeed[]): NewsFeed[] {
-  for (let i = 0; i < feeds.length; i++) {
-    feeds[i].read = false; // 타입 추론 => 타입스크립트가 타입을 추론하는 상황이라면 내부적으로 타이핑을 해줌.
-  }
-  return feeds;
+    for (let i = 0; i < feeds.length; i++) {
+        feeds[i].read = false; // 타입 추론 => 타입스크립트가 타입을 추론하는 상황이라면 내부적으로 타이핑을 해줌.
+    }
+    return feeds;
 };
 
 const updateView = (htmlView: string): void => {
-  if (container !== null) {
-    container.innerHTML = htmlView;
-  } else {
-    console.error("최상위 컨테이너가 없어 UI 진행이 불가능합니다.");
-  }
+    if (container !== null) {
+        container.innerHTML = htmlView;
+    } else {
+        console.error('최상위 컨테이너가 없어 UI 진행이 불가능합니다.');
+    }
 };
 
 const newsFeed = function (): void {
-  const api = new NewsFeedApi();
-  let newsFeed: NewsFeed[] = store.feeds;
-  const newsList = [];
+    const api = new NewsFeedApi();
+    let newsFeed: NewsFeed[] = store.feeds;
+    const newsList = [];
 
-  if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(api.getData());
-  }
+    if (newsFeed.length === 0) {
+        newsFeed = store.feeds = makeFeeds(api.getData());
+    }
 
-  let template = `
+    let template = `
     <div class="bg-gray-600 min-h-screen">
       <div class="bg-white text-xl">
         <div class="mx-auto px-4">
@@ -136,10 +136,14 @@ const newsFeed = function (): void {
     </div>
   `;
 
-  for (let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
-    newsList.push(`
+    for (
+        let i = (store.currentPage - 1) * 10;
+        i < store.currentPage * 10;
+        i++
+    ) {
+        newsList.push(`
     <div class="p-6 ${
-      newsFeed[i].read ? "bg-red-500" : "bg-white"
+        newsFeed[i].read ? 'bg-red-500' : 'bg-white'
     } mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
     <div class="flex">
       <div class="flex-auto">
@@ -147,7 +151,7 @@ const newsFeed = function (): void {
       </div>
       <div class="text-center text-sm">
         <div class="w-10 text-white bg-green-300 rounded-lg px-0 py-2">${
-          newsFeed[i].comments_count
+            newsFeed[i].comments_count
         }</div>
       </div>
     </div>
@@ -160,31 +164,31 @@ const newsFeed = function (): void {
     </div>
   </div>    
       `);
-  }
+    }
 
-  template = template.replace("{{__news_feed__}}", newsList.join(""));
-  template = template.replace(
-    "{{__prev_page__}}",
-    String(store.currentPage > 1 ? store.currentPage - 1 : 1)
-  );
-  template = template.replace(
-    "{{__next_page__}}",
-    String(
-      store.currentPage < newsFeed.length / 10
-        ? store.currentPage + 1
-        : newsFeed.length / 10
-    )
-  );
+    template = template.replace('{{__news_feed__}}', newsList.join(''));
+    template = template.replace(
+        '{{__prev_page__}}',
+        String(store.currentPage > 1 ? store.currentPage - 1 : 1)
+    );
+    template = template.replace(
+        '{{__next_page__}}',
+        String(
+            store.currentPage < newsFeed.length / 10
+                ? store.currentPage + 1
+                : newsFeed.length / 10
+        )
+    );
 
-  updateView(template);
+    updateView(template);
 };
 
 const newsDetail = (): void => {
-  const id = location.hash.substring(7);
-  const api = new NewsDetailApi();
-  const newsContent: NewsDetail = api.getData(id);
+    const id = location.hash.substring(7);
+    const api = new NewsDetailApi();
+    const newsContent: NewsDetail = api.getData(id);
 
-  let template = `
+    let template = `
   <div class="bg-gray-600 min-h-screen pb-8">
       <div class="bg-white text-xl">
         <div class="mx-auto px-4">
@@ -213,53 +217,53 @@ const newsDetail = (): void => {
     </div>
   `;
 
-  for (let i = 0; i < store.feeds.length; i++) {
-    if (store.feeds[i].id === Number(id)) {
-      store.feeds[i].read = true;
-      break;
+    for (let i = 0; i < store.feeds.length; i++) {
+        if (store.feeds[i].id === Number(id)) {
+            store.feeds[i].read = true;
+            break;
+        }
     }
-  }
 
-  updateView(
-    template.replace("{{__comments__}}", makeComment(newsContent.comments))
-  );
+    updateView(
+        template.replace('{{__comments__}}', makeComment(newsContent.comments))
+    );
 };
 
 function makeComment(comments: NewsComment[]): string {
-  const commentString = [];
+    const commentString: string[] = [];
 
-  for (let i = 0; i < comments.length; i++) {
-    const comment: NewsComment = comments[i];
-    commentString.push(`
-    <div style="padding-left: ${comment.level * 40}px;" class="mt-4">
-        <div class="text-gray-400">
-          <i class="fa fa-sort-up mr-2"></i>
-          <strong>${comment.user}</strong> ${comment.time_ago}
-        </div>
-        <p class="text-gray-700">${comment.content}</p>
+    comments.forEach((comment) => {
+        commentString.push(`<div style="padding-left: ${
+            comment.level * 40
+        }px;" class="mt-4">
+      <div class="text-gray-400">
+        <i class="fa fa-sort-up mr-2"></i>
+        <strong>${comment.user}</strong> ${comment.time_ago}
       </div>
-    `);
-    if (comment.comments.length > 0) {
-      commentString.push(makeComment(comment.comments));
-    }
-  }
+      <p class="text-gray-700">${comment.content}</p>
+    </div>
+  `);
+        if (comment.comments.length > 0) {
+            commentString.push(makeComment(comment.comments));
+        }
+    });
 
-  return commentString.join("");
+    return commentString.join('');
 }
 
 const router = function (): void {
-  const routePath = location.hash;
+    const routePath = location.hash;
 
-  if (routePath === "") {
-    newsFeed();
-  } else if (routePath.indexOf("#/page/") >= 0) {
-    store.currentPage = Number(location.hash.substring(7));
-    newsFeed();
-  } else {
-    newsDetail();
-  }
+    if (routePath === '') {
+        newsFeed();
+    } else if (routePath.indexOf('#/page/') >= 0) {
+        store.currentPage = Number(location.hash.substring(7));
+        newsFeed();
+    } else {
+        newsDetail();
+    }
 };
 
-window.addEventListener("hashchange", router);
+window.addEventListener('hashchange', router);
 
 router();
