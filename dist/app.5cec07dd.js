@@ -409,8 +409,6 @@ var api_1 = require("../core/api");
 
 var config_1 = require("../config");
 
-var app_1 = require("../../app");
-
 var view_1 = __importDefault(require("../core/view"));
 
 var template = "<div class=\"bg-gray-600 min-h-screen pb-8\">\n<div class=\"bg-white text-xl\">\n  <div class=\"mx-auto px-4\">\n    <div class=\"flex justify-between items-center py-6\">\n      <div class=\"flex justify-start\">\n        <h1 class=\"font-extrabold\">Hacker News</h1>\n      </div>\n      <div class=\"items-center justify-end\">\n        <a href=\"#/page/{{__currentPage__}}\" class=\"text-gray-500\">\n          <i class=\"fa fa-times\"></i>\n        </a>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n  <h2>{{__title__}}</h2>\n  <div class=\"text-gray-400 h-20\">\n    {{__content__}}\n  </div>\n\n  {{__comments__}}\n\n</div>\n</div>\n";
@@ -429,15 +427,15 @@ function (_super) {
     var api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace("@id", id));
     var newsDetail = api.getData();
 
-    for (var i = 0; i < app_1.store.feeds.length; i++) {
-      if (app_1.store.feeds[i].id === Number(id)) {
-        app_1.store.feeds[i].read = true;
+    for (var i = 0; i < window.store.feeds.length; i++) {
+      if (window.store.feeds[i].id === Number(id)) {
+        window.store.feeds[i].read = true;
         break;
       }
     }
 
     this.setTemplateData("comments", this.makeComment(newsDetail.comments));
-    this.setTemplateData("currentPage", String(app_1.store.currentPage));
+    this.setTemplateData("currentPage", String(window.store.currentPage));
     this.setTemplateData("title", newsDetail.title);
     this.setTemplateData("content", newsDetail.content);
     this.updateView();
@@ -460,7 +458,7 @@ function (_super) {
 }(view_1.default);
 
 exports.default = NewsDetailView;
-},{"../core/api":"src/core/api.ts","../config":"src/config.ts","../../app":"app.ts","../core/view":"src/core/view.ts"}],"src/page/news-feed-view.ts":[function(require,module,exports) {
+},{"../core/api":"src/core/api.ts","../config":"src/config.ts","../core/view":"src/core/view.ts"}],"src/page/news-feed-view.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -507,8 +505,6 @@ var api_1 = require("../core/api");
 
 var config_1 = require("../config");
 
-var app_1 = require("../../app");
-
 var template = "\n<div class=\"bg-gray-600 min-h-screen\">\n  <div class=\"bg-white text-xl\">\n    <div class=\"mx-auto px-4\">\n      <div class=\"flex justify-between items-center py-6\">\n        <div class=\"flex justify-start\">\n          <h1 class=\"font-extrabold\">Hacker News</h1>\n        </div>\n        <div class=\"items-center justify-end\">\n          <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n            Previous\n          </a>\n          <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n            Next\n          </a>\n        </div>\n      </div> \n    </div>\n  </div>\n  <div class=\"p-4 text-2xl text-gray-700\">\n      {{__news_feed__}}\n  </div>\n</div>\n";
 
 var NewsFeedView =
@@ -520,10 +516,10 @@ function (_super) {
     var _this = _super.call(this, containerId, template) || this;
 
     _this.api = new api_1.NewsFeedApi(config_1.NEWS_URL);
-    _this.feeds = app_1.store.feeds;
+    _this.feeds = window.store.feeds;
 
     if (_this.feeds.length === 0) {
-      _this.feeds = app_1.store.feeds = _this.api.getData();
+      _this.feeds = window.store.feeds = _this.api.getData();
 
       _this.makeFeeds();
     }
@@ -532,9 +528,9 @@ function (_super) {
   }
 
   NewsFeedView.prototype.render = function () {
-    app_1.store.currentPage = Number(location.hash.substr(7) || 1);
+    window.store.currentPage = Number(location.hash.substr(7) || 1);
 
-    for (var i = (app_1.store.currentPage - 1) * 10; i < app_1.store.currentPage * 10; i++) {
+    for (var i = (window.store.currentPage - 1) * 10; i < window.store.currentPage * 10; i++) {
       var _a = this.feeds[i],
           id = _a.id,
           title = _a.title,
@@ -547,8 +543,8 @@ function (_super) {
     }
 
     this.setTemplateData("news_feed", this.getHtml());
-    this.setTemplateData("prev_page", String(app_1.store.currentPage > 1 ? app_1.store.currentPage - 1 : 1));
-    this.setTemplateData("next_page", String(app_1.store.currentPage < this.feeds.length / 10 ? app_1.store.currentPage + 1 : this.feeds.length / 10));
+    this.setTemplateData("prev_page", String(window.store.currentPage > 1 ? window.store.currentPage - 1 : 1));
+    this.setTemplateData("next_page", String(window.store.currentPage < this.feeds.length / 10 ? window.store.currentPage + 1 : this.feeds.length / 10));
     this.updateView();
   };
 
@@ -562,7 +558,7 @@ function (_super) {
 }(view_1.default);
 
 exports.default = NewsFeedView;
-},{"../core/view":"src/core/view.ts","../core/api":"src/core/api.ts","../config":"src/config.ts","../../app":"app.ts"}],"src/page/index.ts":[function(require,module,exports) {
+},{"../core/view":"src/core/view.ts","../core/api":"src/core/api.ts","../config":"src/config.ts"}],"src/page/index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -593,7 +589,7 @@ Object.defineProperty(exports, "NewsFeedView", {
     return __importDefault(news_feed_view_1).default;
   }
 });
-},{"./news-detail-view":"src/page/news-detail-view.ts","./news-feed-view":"src/page/news-feed-view.ts"}],"app.ts":[function(require,module,exports) {
+},{"./news-detail-view":"src/page/news-detail-view.ts","./news-feed-view":"src/page/news-feed-view.ts"}],"src/app.ts":[function(require,module,exports) {
 "use strict"; // const container: HTMLElement | null = document.getElementById("root"); // Union Type
 // const ajax: XMLHttpRequest = new XMLHttpRequest(); // let => 다른 값을 할당할 수 있음
 // const content = document.createElement("div");
@@ -609,14 +605,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.store = void 0;
 
-var router_1 = __importDefault(require("./src/core/router"));
+var router_1 = __importDefault(require("./core/router"));
 
-var page_1 = require("./src/page");
+var page_1 = require("./page");
 
 exports.store = {
   currentPage: 1,
   feeds: []
 };
+window.store = exports.store;
 var router = new router_1.default();
 var newsFeedView = new page_1.NewsFeedView("root");
 var newsDetailView = new page_1.NewsDetailView("root");
@@ -624,7 +621,7 @@ router.setDefaultPage(newsFeedView);
 router.addRoutePath("/page/", newsFeedView);
 router.addRoutePath("/show/", newsDetailView);
 router.route();
-},{"./src/core/router":"src/core/router.ts","./src/page":"src/page/index.ts"}],"../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./core/router":"src/core/router.ts","./page":"src/page/index.ts"}],"../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -652,7 +649,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60279" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61692" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -828,5 +825,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.ts"], null)
-//# sourceMappingURL=/app.c61986b1.js.map
+},{}]},{},["../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/app.ts"], null)
+//# sourceMappingURL=/app.5cec07dd.js.map
