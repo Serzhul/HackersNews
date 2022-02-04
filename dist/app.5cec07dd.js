@@ -145,7 +145,7 @@ var Router =
 /** @class */
 function () {
   function Router() {
-    window.addEventListener("hashchange", this.route.bind(this));
+    window.addEventListener('hashchange', this.route.bind(this));
     this.routeTable = [];
     this.defaultRoute = null;
   }
@@ -159,7 +159,7 @@ function () {
 
   Router.prototype.setDefaultPage = function (page) {
     this.defaultRoute = {
-      path: "",
+      path: '',
       page: page
     };
   };
@@ -169,8 +169,8 @@ function () {
 
     var routePath = location.hash;
 
-    if (routePath === "" && this.defaultRoute) {
-      this.defaultRoute.page.render();
+    if (routePath === '' && this.defaultRoute) {
+      this.defaultRoute.page.render('');
     }
 
     try {
@@ -178,7 +178,8 @@ function () {
         var routeInfo = _c.value;
 
         if (routePath.indexOf(routeInfo.path) >= 0) {
-          routeInfo.page.render();
+          console.log(routePath);
+          routeInfo.page.render(routePath.substr(7));
           break;
         }
       }
@@ -328,7 +329,7 @@ function () {
     var containerElement = document.getElementById(containerId);
 
     if (!containerElement) {
-      throw "최상위 컨테이너가 없어 UI를 진행하지 못합니다.";
+      throw '최상위 컨테이너가 없어 UI를 진행하지 못합니다.';
     }
 
     this.container = containerElement;
@@ -347,7 +348,7 @@ function () {
   };
 
   View.prototype.getHtml = function () {
-    var snapshot = this.htmlList.join("");
+    var snapshot = this.htmlList.join('');
     this.clearHtmlList();
     return snapshot;
   };
@@ -418,28 +419,33 @@ var NewsDetailView =
 function (_super) {
   __extends(NewsDetailView, _super);
 
-  function NewsDetailView(containerId) {
-    return _super.call(this, containerId, template) || this;
+  function NewsDetailView(containerId, store) {
+    var _this = _super.call(this, containerId, template) || this;
+
+    _this.render = function (id) {
+      var api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace('@id', id));
+
+      var _a = api.getData(),
+          title = _a.title,
+          content = _a.content,
+          comments = _a.comments;
+
+      _this.store.makeRead(Number(id));
+
+      _this.setTemplateData('currentPage', String(_this.store.currentPage));
+
+      _this.setTemplateData('title', title);
+
+      _this.setTemplateData('content', content);
+
+      _this.setTemplateData('comments', _this.makeComment(comments));
+
+      _this.updateView();
+    };
+
+    _this.store = store;
+    return _this;
   }
-
-  NewsDetailView.prototype.render = function () {
-    var id = location.hash.substring(7);
-    var api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace("@id", id));
-    var newsDetail = api.getData();
-
-    for (var i = 0; i < window.store.feeds.length; i++) {
-      if (window.store.feeds[i].id === Number(id)) {
-        window.store.feeds[i].read = true;
-        break;
-      }
-    }
-
-    this.setTemplateData("comments", this.makeComment(newsDetail.comments));
-    this.setTemplateData("currentPage", String(window.store.currentPage));
-    this.setTemplateData("title", newsDetail.title);
-    this.setTemplateData("content", newsDetail.content);
-    this.updateView();
-  };
 
   NewsDetailView.prototype.makeComment = function (comments) {
     var _this = this;
@@ -512,47 +518,47 @@ var NewsFeedView =
 function (_super) {
   __extends(NewsFeedView, _super);
 
-  function NewsFeedView(containerId) {
+  function NewsFeedView(containerId, store) {
     var _this = _super.call(this, containerId, template) || this;
 
+    _this.render = function (page) {
+      if (page === void 0) {
+        page = '1';
+      }
+
+      _this.store.currentPage = Number(page);
+
+      for (var i = (_this.store.currentPage - 1) * 10; i < _this.store.currentPage * 10; i++) {
+        var _a = _this.store.getFeed(i),
+            id = _a.id,
+            title = _a.title,
+            comments_count = _a.comments_count,
+            user = _a.user,
+            points = _a.points,
+            time_ago = _a.time_ago,
+            read = _a.read;
+
+        _this.addHtml("\n        <div class=\"p-6 ".concat(read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n        <div class=\"flex\">\n          <div class=\"flex-auto\">\n            <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n          </div>\n          <div class=\"text-center text-sm\">\n            <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n          </div>\n        </div>\n        <div class=\"flex mt-3\">\n          <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n            <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n            <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n            <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n          </div>  \n        </div>\n      </div>    \n          "));
+      }
+
+      _this.setTemplateData('news_feed', _this.getHtml());
+
+      _this.setTemplateData('prev_page', String(_this.store.prevPage));
+
+      _this.setTemplateData('next_page', String(_this.store.nextPage));
+
+      _this.updateView();
+    };
+
+    _this.store = store;
     _this.api = new api_1.NewsFeedApi(config_1.NEWS_URL);
-    _this.feeds = window.store.feeds;
 
-    if (_this.feeds.length === 0) {
-      _this.feeds = window.store.feeds = _this.api.getData();
-
-      _this.makeFeeds();
+    if (!_this.store.hasFeeds) {
+      _this.store.setFeeds(_this.api.getData());
     }
 
     return _this;
   }
-
-  NewsFeedView.prototype.render = function () {
-    window.store.currentPage = Number(location.hash.substr(7) || 1);
-
-    for (var i = (window.store.currentPage - 1) * 10; i < window.store.currentPage * 10; i++) {
-      var _a = this.feeds[i],
-          id = _a.id,
-          title = _a.title,
-          comments_count = _a.comments_count,
-          user = _a.user,
-          points = _a.points,
-          time_ago = _a.time_ago,
-          read = _a.read;
-      this.addHtml("\n        <div class=\"p-6 ".concat(read ? "bg-red-500" : "bg-white", " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n        <div class=\"flex\">\n          <div class=\"flex-auto\">\n            <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n          </div>\n          <div class=\"text-center text-sm\">\n            <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n          </div>\n        </div>\n        <div class=\"flex mt-3\">\n          <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n            <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n            <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n            <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n          </div>  \n        </div>\n      </div>    \n          "));
-    }
-
-    this.setTemplateData("news_feed", this.getHtml());
-    this.setTemplateData("prev_page", String(window.store.currentPage > 1 ? window.store.currentPage - 1 : 1));
-    this.setTemplateData("next_page", String(window.store.currentPage < this.feeds.length / 10 ? window.store.currentPage + 1 : this.feeds.length / 10));
-    this.updateView();
-  };
-
-  NewsFeedView.prototype.makeFeeds = function () {
-    for (var i = 0; i < this.feeds.length; i++) {
-      this.feeds[i].read = false; // 타입 추론 => 타입스크립트가 타입을 추론하는 상황이라면 내부적으로 타이핑을 해줌.
-    }
-  };
 
   return NewsFeedView;
 }(view_1.default);
@@ -589,7 +595,109 @@ Object.defineProperty(exports, "NewsFeedView", {
     return __importDefault(news_feed_view_1).default;
   }
 });
-},{"./news-detail-view":"src/page/news-detail-view.ts","./news-feed-view":"src/page/news-feed-view.ts"}],"src/app.ts":[function(require,module,exports) {
+},{"./news-detail-view":"src/page/news-detail-view.ts","./news-feed-view":"src/page/news-feed-view.ts"}],"src/store.ts":[function(require,module,exports) {
+"use strict";
+
+var __assign = this && this.__assign || function () {
+  __assign = Object.assign || function (t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+
+      for (var p in s) {
+        if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+      }
+    }
+
+    return t;
+  };
+
+  return __assign.apply(this, arguments);
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var Store =
+/** @class */
+function () {
+  function Store() {
+    this.feeds = [];
+    this._currentPage = 1;
+  }
+
+  Object.defineProperty(Store.prototype, "currentPage", {
+    // currentPage는 속성으로 숫자값임. 내부에선 함수로, 외부에선 속성처럼 보이게 하는 문법이 getter setter
+    get: function get() {
+      return this._currentPage;
+    },
+    set: function set(page) {
+      if (page <= 0) return;
+      this._currentPage = page;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Store.prototype, "nextPage", {
+    get: function get() {
+      return this._currentPage + 1;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Store.prototype, "prevPage", {
+    get: function get() {
+      return this._currentPage > 1 ? this._currentPage - 1 : 1;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Store.prototype, "numberOfFeed", {
+    get: function get() {
+      return this.feeds.length;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Store.prototype, "hasFeeds", {
+    get: function get() {
+      return this.feeds.length > 0;
+    },
+    enumerable: false,
+    configurable: true
+  });
+
+  Store.prototype.getAllFeeds = function () {
+    return this.feeds;
+  };
+
+  Store.prototype.getFeed = function (position) {
+    return this.feeds[position];
+  };
+
+  Store.prototype.setFeeds = function (feeds) {
+    this.feeds = feeds.map(function (feed) {
+      return __assign(__assign({}, feed), {
+        read: false
+      });
+    });
+  };
+
+  Store.prototype.makeRead = function (id) {
+    var feed = this.feeds.find(function (feed) {
+      return feed.id === id;
+    });
+
+    if (feed) {
+      feed.read = true;
+    }
+  };
+
+  return Store;
+}();
+
+exports.default = Store;
+},{}],"src/app.ts":[function(require,module,exports) {
 "use strict"; // const container: HTMLElement | null = document.getElementById("root"); // Union Type
 // const ajax: XMLHttpRequest = new XMLHttpRequest(); // let => 다른 값을 할당할 수 있음
 // const content = document.createElement("div");
@@ -603,25 +711,22 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.store = void 0;
 
 var router_1 = __importDefault(require("./core/router"));
 
 var page_1 = require("./page");
 
-exports.store = {
-  currentPage: 1,
-  feeds: []
-};
-window.store = exports.store;
+var store_1 = __importDefault(require("./store"));
+
+var store = new store_1.default();
 var router = new router_1.default();
-var newsFeedView = new page_1.NewsFeedView("root");
-var newsDetailView = new page_1.NewsDetailView("root");
+var newsFeedView = new page_1.NewsFeedView('root', store);
+var newsDetailView = new page_1.NewsDetailView('root', store);
 router.setDefaultPage(newsFeedView);
-router.addRoutePath("/page/", newsFeedView);
-router.addRoutePath("/show/", newsDetailView);
+router.addRoutePath('/page/', newsFeedView);
+router.addRoutePath('/show/', newsDetailView);
 router.route();
-},{"./core/router":"src/core/router.ts","./page":"src/page/index.ts"}],"../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./core/router":"src/core/router.ts","./page":"src/page/index.ts","./store":"src/store.ts"}],"../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -649,7 +754,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61692" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64704" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -825,5 +930,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/app.ts"], null)
+},{}]},{},["../../../../AppData/Local/Yarn/Data/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/app.ts"], null)
 //# sourceMappingURL=/app.5cec07dd.js.map

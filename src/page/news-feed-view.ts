@@ -1,7 +1,8 @@
-import View from "../core/view";
-import { NewsFeed } from "../types";
-import { NewsFeedApi } from "../core/api";
-import { NEWS_URL } from "../config";
+import View from '../core/view';
+import { NewsStore } from '../types';
+import { NewsFeedApi } from '../core/api';
+import { NEWS_URL } from '../config';
+
 const template = `
 <div class="bg-gray-600 min-h-screen">
   <div class="bg-white text-xl">
@@ -27,33 +28,32 @@ const template = `
 </div>
 `;
 export default class NewsFeedView extends View {
-  private api: NewsFeedApi;
-  private feeds: NewsFeed[];
+    private api: NewsFeedApi;
+    private store: NewsStore;
 
-  constructor(containerId: string) {
-    super(containerId, template);
+    constructor(containerId: string, store: NewsStore) {
+        super(containerId, template);
 
-    this.api = new NewsFeedApi(NEWS_URL);
-    this.feeds = window.store.feeds;
+        this.store = store;
+        this.api = new NewsFeedApi(NEWS_URL);
 
-    if (this.feeds.length === 0) {
-      this.feeds = window.store.feeds = this.api.getData();
-      this.makeFeeds();
+        if (!this.store.hasFeeds) {
+            this.store.setFeeds(this.api.getData());
+        }
     }
-  }
 
-  render() {
-    window.store.currentPage = Number(location.hash.substr(7) || 1);
-    for (
-      let i = (window.store.currentPage - 1) * 10;
-      i < window.store.currentPage * 10;
-      i++
-    ) {
-      const { id, title, comments_count, user, points, time_ago, read } =
-        this.feeds[i];
-      this.addHtml(`
+    render = (page: string = '1'): void => {
+        this.store.currentPage = Number(page);
+        for (
+            let i = (this.store.currentPage - 1) * 10;
+            i < this.store.currentPage * 10;
+            i++
+        ) {
+            const { id, title, comments_count, user, points, time_ago, read } =
+                this.store.getFeed(i);
+            this.addHtml(`
         <div class="p-6 ${
-          read ? "bg-red-500" : "bg-white"
+            read ? 'bg-red-500' : 'bg-white'
         } mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
         <div class="flex">
           <div class="flex-auto">
@@ -72,30 +72,14 @@ export default class NewsFeedView extends View {
         </div>
       </div>    
           `);
-    }
+        }
 
-    this.setTemplateData("news_feed", this.getHtml());
+        this.setTemplateData('news_feed', this.getHtml());
 
-    this.setTemplateData(
-      "prev_page",
-      String(window.store.currentPage > 1 ? window.store.currentPage - 1 : 1)
-    );
+        this.setTemplateData('prev_page', String(this.store.prevPage));
 
-    this.setTemplateData(
-      "next_page",
-      String(
-        window.store.currentPage < this.feeds.length / 10
-          ? window.store.currentPage + 1
-          : this.feeds.length / 10
-      )
-    );
+        this.setTemplateData('next_page', String(this.store.nextPage));
 
-    this.updateView();
-  }
-
-  private makeFeeds(): void {
-    for (let i = 0; i < this.feeds.length; i++) {
-      this.feeds[i].read = false; // 타입 추론 => 타입스크립트가 타입을 추론하는 상황이라면 내부적으로 타이핑을 해줌.
-    }
-  }
+        this.updateView();
+    };
 }

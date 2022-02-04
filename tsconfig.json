@@ -1,12 +1,13 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES5", // 자바스크립트 버전 문법
-    "module": "CommonJS", // 모듈 관련 옵션
-    "alwaysStrict": true,
-    "noImplicitAny": true, // strict 하위 옵션, any를 쓰지 못하도록
-    "noImplicitThis": true, // strict 하위 옵션, this 타입 명시하도록
-    "sourceMap": true, // dist => targetDirectory (TS=>JS 컴파일한 값)에서 sourcemap 파일을 통해 개발환경과 실행환경을 일치시켜줌
-    "downlevelIteration": true
-  }
+    "compilerOptions": {
+        "strict": true,
+        "target": "ES5", // 자바스크립트 버전 문법
+        "module": "CommonJS", // 모듈 관련 옵션
+        "alwaysStrict": true,
+        "noImplicitAny": true, // strict 하위 옵션, any를 쓰지 못하도록
+        "noImplicitThis": true, // strict 하위 옵션, this 타입 명시하도록
+        "sourceMap": true, // dist => targetDirectory (TS=>JS 컴파일한 값)에서 sourcemap 파일을 통해 개발환경과 실행환경을 일치시켜줌
+        "downlevelIteration": true,
+        "lib": ["ES6", "dom"]
+    }
 }

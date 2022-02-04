@@ -1,7 +1,7 @@
-import { NewsDetailApi } from "../core/api";
-import { CONTENT_URL } from "../config";
-import { NewsDetail, NewsComment } from "../types";
-import View from "../core/view";
+import { NewsDetailApi } from '../core/api';
+import { CONTENT_URL } from '../config';
+import { NewsDetail, NewsComment, NewsStore } from '../types';
+import View from '../core/view';
 
 const template = `<div class="bg-gray-600 min-h-screen pb-8">
 <div class="bg-white text-xl">
@@ -32,33 +32,30 @@ const template = `<div class="bg-gray-600 min-h-screen pb-8">
 `;
 
 export default class NewsDetailView extends View {
-  constructor(containerId: string) {
-    super(containerId, template);
-  }
-  render() {
-    const id = location.hash.substring(7);
-    const api = new NewsDetailApi(CONTENT_URL.replace("@id", id));
-    const newsDetail: NewsDetail = api.getData();
-    for (let i = 0; i < window.store.feeds.length; i++) {
-      if (window.store.feeds[i].id === Number(id)) {
-        window.store.feeds[i].read = true;
-        break;
-      }
+    private store: NewsStore;
+    constructor(containerId: string, store: NewsStore) {
+        super(containerId, template);
+
+        this.store = store;
     }
+    render = (id: string): void => {
+        const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
+        const { title, content, comments } = api.getData();
 
-    this.setTemplateData("comments", this.makeComment(newsDetail.comments));
+        this.store.makeRead(Number(id));
 
-    this.setTemplateData("currentPage", String(window.store.currentPage));
-    this.setTemplateData("title", newsDetail.title);
-    this.setTemplateData("content", newsDetail.content);
+        this.setTemplateData('currentPage', String(this.store.currentPage));
+        this.setTemplateData('title', title);
+        this.setTemplateData('content', content);
+        this.setTemplateData('comments', this.makeComment(comments));
 
-    this.updateView();
-  }
-  makeComment(comments: NewsComment[]): string {
-    comments.forEach((comment) => {
-      this.addHtml(`<div style="padding-left: ${
-        comment.level * 40
-      }px;" class="mt-4">
+        this.updateView();
+    };
+    makeComment(comments: NewsComment[]): string {
+        comments.forEach((comment) => {
+            this.addHtml(`<div style="padding-left: ${
+                comment.level * 40
+            }px;" class="mt-4">
               <div class="text-gray-400">
                 <i class="fa fa-sort-up mr-2"></i>
                 <strong>${comment.user}</strong> ${comment.time_ago}
@@ -66,11 +63,11 @@ export default class NewsDetailView extends View {
               <p class="text-gray-700">${comment.content}</p>
             </div>
           `);
-      if (comment.comments.length > 0) {
-        this.addHtml(this.makeComment(comment.comments));
-      }
-    });
+            if (comment.comments.length > 0) {
+                this.addHtml(this.makeComment(comment.comments));
+            }
+        });
 
-    return this.getHtml();
-  }
+        return this.getHtml();
+    }
 }
