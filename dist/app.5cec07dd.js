@@ -230,6 +230,149 @@ var __extends = this && this.__extends || function () {
   };
 }();
 
+var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+var __generator = this && this.__generator || function (thisArg, body) {
+  var _ = {
+    label: 0,
+    sent: function sent() {
+      if (t[0] & 1) throw t[1];
+      return t[1];
+    },
+    trys: [],
+    ops: []
+  },
+      f,
+      y,
+      t,
+      g;
+  return g = {
+    next: verb(0),
+    "throw": verb(1),
+    "return": verb(2)
+  }, typeof Symbol === "function" && (g[Symbol.iterator] = function () {
+    return this;
+  }), g;
+
+  function verb(n) {
+    return function (v) {
+      return step([n, v]);
+    };
+  }
+
+  function step(op) {
+    if (f) throw new TypeError("Generator is already executing.");
+
+    while (_) {
+      try {
+        if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+        if (y = 0, t) op = [op[0] & 2, t.value];
+
+        switch (op[0]) {
+          case 0:
+          case 1:
+            t = op;
+            break;
+
+          case 4:
+            _.label++;
+            return {
+              value: op[1],
+              done: false
+            };
+
+          case 5:
+            _.label++;
+            y = op[1];
+            op = [0];
+            continue;
+
+          case 7:
+            op = _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+
+          default:
+            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+              _ = 0;
+              continue;
+            }
+
+            if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+              _.label = op[1];
+              break;
+            }
+
+            if (op[0] === 6 && _.label < t[1]) {
+              _.label = t[1];
+              t = op;
+              break;
+            }
+
+            if (t && _.label < t[2]) {
+              _.label = t[2];
+
+              _.ops.push(op);
+
+              break;
+            }
+
+            if (t[2]) _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+        }
+
+        op = body.call(thisArg, _);
+      } catch (e) {
+        op = [6, e];
+        y = 0;
+      } finally {
+        f = t = 0;
+      }
+    }
+
+    if (op[0] & 5) throw op[1];
+    return {
+      value: op[0] ? op[1] : void 0,
+      done: true
+    };
+  }
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -253,24 +396,38 @@ function () {
   function Api(url) {
     this.xhr = new XMLHttpRequest();
     this.url = url;
-  }
+  } // getRequestWithXHR<AjaxResponse>(cb: (data: AjaxResponse) => void): void {
+  //     // 직접 URL을 받게
+  //     this.xhr.open('GET', this.url);
+  //     this.xhr.addEventListener('load', () => {
+  //         cb(JSON.parse(this.xhr.response) as AjaxResponse); //JSON.parse는 동기적으로 작동함
+  //     });
+  //     this.xhr.send();
+  // }
 
-  Api.prototype.getRequestWithXHR = function (cb) {
-    var _this = this; // 직접 URL을 받게
 
+  Api.prototype.request = function () {
+    return __awaiter(this, void 0, Promise, function () {
+      var res;
+      return __generator(this, function (_a) {
+        switch (_a.label) {
+          case 0:
+            return [4
+            /*yield*/
+            , fetch(this.url)];
 
-    this.xhr.open('GET', this.url);
-    this.xhr.addEventListener('load', function () {
-      cb(JSON.parse(_this.xhr.response)); //JSON.parse는 동기적으로 작동함
-    });
-    this.xhr.send();
-  };
+          case 1:
+            res = _a.sent();
+            return [4
+            /*yield*/
+            , res.json()];
 
-  Api.prototype.getRequestWithPromise = function (cb) {
-    fetch(this.url).then(function (res) {
-      return res.json();
-    }).then(cb).catch(function () {
-      console.error('데이터를 불러오지 못했습니다.');
+          case 2:
+            return [2
+            /*return*/
+            , _a.sent()];
+        }
+      });
     });
   };
 
@@ -286,14 +443,19 @@ function (_super) {
 
   function NewsFeedApi(url) {
     return _super.call(this, url) || this;
-  }
+  } // getDataWithXHR(cb: (data: NewsFeed[]) => void): void {
+  //     return this.getRequestWithXHR<NewsFeed[]>(cb);
+  // }
 
-  NewsFeedApi.prototype.getDataWithXHR = function (cb) {
-    return this.getRequestWithXHR(cb);
-  };
 
-  NewsFeedApi.prototype.getDataWithPromise = function (cb) {
-    return this.getRequestWithPromise(cb);
+  NewsFeedApi.prototype.getData = function () {
+    return __awaiter(this, void 0, Promise, function () {
+      return __generator(this, function (_a) {
+        return [2
+        /*return*/
+        , this.request()];
+      });
+    });
   };
 
   return NewsFeedApi;
@@ -308,14 +470,13 @@ function (_super) {
 
   function NewsDetailApi(url) {
     return _super.call(this, url) || this;
-  }
+  } // getDataWithXHR(cb: (data: NewsDetail) => void): void {
+  //     return this.getRequestWithXHR<NewsDetail>(cb);
+  // }
 
-  NewsDetailApi.prototype.getDataWithXHR = function (cb) {
-    return this.getRequestWithXHR(cb);
-  };
 
-  NewsDetailApi.prototype.getDataWithPromise = function (cb) {
-    return this.getRequestWithPromise(cb);
+  NewsDetailApi.prototype.getData = function () {
+    return this.request();
   };
 
   return NewsDetailApi;
@@ -415,6 +576,149 @@ var __extends = this && this.__extends || function () {
   };
 }();
 
+var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+var __generator = this && this.__generator || function (thisArg, body) {
+  var _ = {
+    label: 0,
+    sent: function sent() {
+      if (t[0] & 1) throw t[1];
+      return t[1];
+    },
+    trys: [],
+    ops: []
+  },
+      f,
+      y,
+      t,
+      g;
+  return g = {
+    next: verb(0),
+    "throw": verb(1),
+    "return": verb(2)
+  }, typeof Symbol === "function" && (g[Symbol.iterator] = function () {
+    return this;
+  }), g;
+
+  function verb(n) {
+    return function (v) {
+      return step([n, v]);
+    };
+  }
+
+  function step(op) {
+    if (f) throw new TypeError("Generator is already executing.");
+
+    while (_) {
+      try {
+        if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+        if (y = 0, t) op = [op[0] & 2, t.value];
+
+        switch (op[0]) {
+          case 0:
+          case 1:
+            t = op;
+            break;
+
+          case 4:
+            _.label++;
+            return {
+              value: op[1],
+              done: false
+            };
+
+          case 5:
+            _.label++;
+            y = op[1];
+            op = [0];
+            continue;
+
+          case 7:
+            op = _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+
+          default:
+            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+              _ = 0;
+              continue;
+            }
+
+            if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+              _.label = op[1];
+              break;
+            }
+
+            if (op[0] === 6 && _.label < t[1]) {
+              _.label = t[1];
+              t = op;
+              break;
+            }
+
+            if (t && _.label < t[2]) {
+              _.label = t[2];
+
+              _.ops.push(op);
+
+              break;
+            }
+
+            if (t[2]) _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+        }
+
+        op = body.call(thisArg, _);
+      } catch (e) {
+        op = [6, e];
+        y = 0;
+      } finally {
+        f = t = 0;
+      }
+    }
+
+    if (op[0] & 5) throw op[1];
+    return {
+      value: op[0] ? op[1] : void 0,
+      done: true
+    };
+  }
+};
+
 var __importDefault = this && this.__importDefault || function (mod) {
   return mod && mod.__esModule ? mod : {
     "default": mod
@@ -442,23 +746,30 @@ function (_super) {
     var _this = _super.call(this, containerId, template) || this;
 
     _this.render = function (id) {
-      var api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace('@id', id));
-      api.getDataWithPromise(function (data) {
-        var title = data.title,
-            content = data.content,
-            comments = data.comments;
+      return __awaiter(_this, void 0, Promise, function () {
+        var api, _a, title, content, comments;
 
-        _this.store.makeRead(Number(id));
+        return __generator(this, function (_b) {
+          switch (_b.label) {
+            case 0:
+              api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace('@id', id));
+              return [4
+              /*yield*/
+              , api.getData()];
 
-        _this.setTemplateData('currentPage', String(_this.store.currentPage));
-
-        _this.setTemplateData('title', title);
-
-        _this.setTemplateData('content', content);
-
-        _this.setTemplateData('comments', _this.makeComment(comments));
-
-        _this.updateView();
+            case 1:
+              _a = _b.sent(), title = _a.title, content = _a.content, comments = _a.comments;
+              this.store.makeRead(Number(id));
+              this.setTemplateData('currentPage', String(this.store.currentPage));
+              this.setTemplateData('title', title);
+              this.setTemplateData('content', content);
+              this.setTemplateData('comments', this.makeComment(comments));
+              this.updateView();
+              return [2
+              /*return*/
+              ];
+          }
+        });
       });
     };
 
@@ -514,6 +825,149 @@ var __extends = this && this.__extends || function () {
   };
 }();
 
+var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+var __generator = this && this.__generator || function (thisArg, body) {
+  var _ = {
+    label: 0,
+    sent: function sent() {
+      if (t[0] & 1) throw t[1];
+      return t[1];
+    },
+    trys: [],
+    ops: []
+  },
+      f,
+      y,
+      t,
+      g;
+  return g = {
+    next: verb(0),
+    "throw": verb(1),
+    "return": verb(2)
+  }, typeof Symbol === "function" && (g[Symbol.iterator] = function () {
+    return this;
+  }), g;
+
+  function verb(n) {
+    return function (v) {
+      return step([n, v]);
+    };
+  }
+
+  function step(op) {
+    if (f) throw new TypeError("Generator is already executing.");
+
+    while (_) {
+      try {
+        if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+        if (y = 0, t) op = [op[0] & 2, t.value];
+
+        switch (op[0]) {
+          case 0:
+          case 1:
+            t = op;
+            break;
+
+          case 4:
+            _.label++;
+            return {
+              value: op[1],
+              done: false
+            };
+
+          case 5:
+            _.label++;
+            y = op[1];
+            op = [0];
+            continue;
+
+          case 7:
+            op = _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+
+          default:
+            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+              _ = 0;
+              continue;
+            }
+
+            if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
+              _.label = op[1];
+              break;
+            }
+
+            if (op[0] === 6 && _.label < t[1]) {
+              _.label = t[1];
+              t = op;
+              break;
+            }
+
+            if (t && _.label < t[2]) {
+              _.label = t[2];
+
+              _.ops.push(op);
+
+              break;
+            }
+
+            if (t[2]) _.ops.pop();
+
+            _.trys.pop();
+
+            continue;
+        }
+
+        op = body.call(thisArg, _);
+      } catch (e) {
+        op = [6, e];
+        y = 0;
+      } finally {
+        f = t = 0;
+      }
+    }
+
+    if (op[0] & 5) throw op[1];
+    return {
+      value: op[0] ? op[1] : void 0,
+      done: true
+    };
+  }
+};
+
 var __importDefault = this && this.__importDefault || function (mod) {
   return mod && mod.__esModule ? mod : {
     "default": mod
@@ -545,40 +999,42 @@ function (_super) {
         page = '1';
       }
 
-      _this.store.currentPage = Number(page);
+      return __awaiter(_this, void 0, Promise, function () {
+        var _a, _b, i, _c, id, title, comments_count, user, points, time_ago, read;
 
-      if (!_this.store.hasFeeds) {
-        _this.api.getDataWithPromise(function (feeds) {
-          _this.store.setFeeds(feeds);
+        return __generator(this, function (_d) {
+          switch (_d.label) {
+            case 0:
+              this.store.currentPage = Number(page);
+              if (!!this.store.hasFeeds) return [3
+              /*break*/
+              , 2];
+              _b = (_a = this.store).setFeeds;
+              return [4
+              /*yield*/
+              , this.api.getData()];
 
-          _this.renderView();
+            case 1:
+              _b.apply(_a, [_d.sent()]);
+
+              _d.label = 2;
+
+            case 2:
+              for (i = (this.store.currentPage - 1) * 10; i < this.store.currentPage * 10; i++) {
+                _c = this.store.getFeed(i), id = _c.id, title = _c.title, comments_count = _c.comments_count, user = _c.user, points = _c.points, time_ago = _c.time_ago, read = _c.read;
+                this.addHtml("\n      <div class=\"p-6 ".concat(read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n      <div class=\"flex\">\n        <div class=\"flex-auto\">\n          <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n        </div>\n        <div class=\"text-center text-sm\">\n          <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n        </div>\n      </div>\n      <div class=\"flex mt-3\">\n        <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n          <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n          <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n          <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n        </div>  \n      </div>\n    </div>    \n        "));
+              }
+
+              this.setTemplateData('news_feed', this.getHtml());
+              this.setTemplateData('prev_page', String(this.store.prevPage));
+              this.setTemplateData('next_page', String(this.store.nextPage));
+              this.updateView();
+              return [2
+              /*return*/
+              ];
+          }
         });
-      }
-
-      _this.renderView();
-    };
-
-    _this.renderView = function () {
-      for (var i = (_this.store.currentPage - 1) * 10; i < _this.store.currentPage * 10; i++) {
-        var _a = _this.store.getFeed(i),
-            id = _a.id,
-            title = _a.title,
-            comments_count = _a.comments_count,
-            user = _a.user,
-            points = _a.points,
-            time_ago = _a.time_ago,
-            read = _a.read;
-
-        _this.addHtml("\n    <div class=\"p-6 ".concat(read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n    <div class=\"flex\">\n      <div class=\"flex-auto\">\n        <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n      </div>\n      <div class=\"text-center text-sm\">\n        <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n      </div>\n    </div>\n    <div class=\"flex mt-3\">\n      <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n        <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n        <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n        <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n      </div>  \n    </div>\n  </div>    \n      "));
-      }
-
-      _this.setTemplateData('news_feed', _this.getHtml());
-
-      _this.setTemplateData('prev_page', String(_this.store.prevPage));
-
-      _this.setTemplateData('next_page', String(_this.store.nextPage));
-
-      _this.updateView();
+      });
     };
 
     _this.store = store;
@@ -780,7 +1236,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59433" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64064" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
