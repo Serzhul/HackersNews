@@ -27,8 +27,6 @@ export default class Router {
 
         for (const routeInfo of this.routeTable) {
             if (routePath.indexOf(routeInfo.path) >= 0) {
-                console.log(routePath);
-
                 routeInfo.page.render(routePath.substr(7));
                 break;
             }

@@ -178,7 +178,6 @@ function () {
         var routeInfo = _c.value;
 
         if (routePath.indexOf(routeInfo.path) >= 0) {
-          console.log(routePath);
           routeInfo.page.render(routePath.substr(7));
           break;
         }
@@ -252,15 +251,27 @@ var Api =
 /** @class */
 function () {
   function Api(url) {
+    this.xhr = new XMLHttpRequest();
     this.url = url;
-    this.ajax = new XMLHttpRequest();
   }
 
-  Api.prototype.getRequest = function () {
-    // 직접 URL을 받게
-    this.ajax.open("GET", this.url, false);
-    this.ajax.send();
-    return JSON.parse(this.ajax.response);
+  Api.prototype.getRequestWithXHR = function (cb) {
+    var _this = this; // 직접 URL을 받게
+
+
+    this.xhr.open('GET', this.url);
+    this.xhr.addEventListener('load', function () {
+      cb(JSON.parse(_this.xhr.response)); //JSON.parse는 동기적으로 작동함
+    });
+    this.xhr.send();
+  };
+
+  Api.prototype.getRequestWithPromise = function (cb) {
+    fetch(this.url).then(function (res) {
+      return res.json();
+    }).then(cb).catch(function () {
+      console.error('데이터를 불러오지 못했습니다.');
+    });
   };
 
   return Api;
@@ -273,12 +284,16 @@ var NewsFeedApi =
 function (_super) {
   __extends(NewsFeedApi, _super);
 
-  function NewsFeedApi() {
-    return _super !== null && _super.apply(this, arguments) || this;
+  function NewsFeedApi(url) {
+    return _super.call(this, url) || this;
   }
 
-  NewsFeedApi.prototype.getData = function () {
-    return this.getRequest();
+  NewsFeedApi.prototype.getDataWithXHR = function (cb) {
+    return this.getRequestWithXHR(cb);
+  };
+
+  NewsFeedApi.prototype.getDataWithPromise = function (cb) {
+    return this.getRequestWithPromise(cb);
   };
 
   return NewsFeedApi;
@@ -291,12 +306,16 @@ var NewsDetailApi =
 function (_super) {
   __extends(NewsDetailApi, _super);
 
-  function NewsDetailApi() {
-    return _super !== null && _super.apply(this, arguments) || this;
+  function NewsDetailApi(url) {
+    return _super.call(this, url) || this;
   }
 
-  NewsDetailApi.prototype.getData = function () {
-    return this.getRequest();
+  NewsDetailApi.prototype.getDataWithXHR = function (cb) {
+    return this.getRequestWithXHR(cb);
+  };
+
+  NewsDetailApi.prototype.getDataWithPromise = function (cb) {
+    return this.getRequestWithPromise(cb);
   };
 
   return NewsDetailApi;
@@ -424,23 +443,23 @@ function (_super) {
 
     _this.render = function (id) {
       var api = new api_1.NewsDetailApi(config_1.CONTENT_URL.replace('@id', id));
+      api.getDataWithPromise(function (data) {
+        var title = data.title,
+            content = data.content,
+            comments = data.comments;
 
-      var _a = api.getData(),
-          title = _a.title,
-          content = _a.content,
-          comments = _a.comments;
+        _this.store.makeRead(Number(id));
 
-      _this.store.makeRead(Number(id));
+        _this.setTemplateData('currentPage', String(_this.store.currentPage));
 
-      _this.setTemplateData('currentPage', String(_this.store.currentPage));
+        _this.setTemplateData('title', title);
 
-      _this.setTemplateData('title', title);
+        _this.setTemplateData('content', content);
 
-      _this.setTemplateData('content', content);
+        _this.setTemplateData('comments', _this.makeComment(comments));
 
-      _this.setTemplateData('comments', _this.makeComment(comments));
-
-      _this.updateView();
+        _this.updateView();
+      });
     };
 
     _this.store = store;
@@ -528,6 +547,18 @@ function (_super) {
 
       _this.store.currentPage = Number(page);
 
+      if (!_this.store.hasFeeds) {
+        _this.api.getDataWithPromise(function (feeds) {
+          _this.store.setFeeds(feeds);
+
+          _this.renderView();
+        });
+      }
+
+      _this.renderView();
+    };
+
+    _this.renderView = function () {
       for (var i = (_this.store.currentPage - 1) * 10; i < _this.store.currentPage * 10; i++) {
         var _a = _this.store.getFeed(i),
             id = _a.id,
@@ -538,7 +569,7 @@ function (_super) {
             time_ago = _a.time_ago,
             read = _a.read;
 
-        _this.addHtml("\n        <div class=\"p-6 ".concat(read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n        <div class=\"flex\">\n          <div class=\"flex-auto\">\n            <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n          </div>\n          <div class=\"text-center text-sm\">\n            <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n          </div>\n        </div>\n        <div class=\"flex mt-3\">\n          <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n            <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n            <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n            <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n          </div>  \n        </div>\n      </div>    \n          "));
+        _this.addHtml("\n    <div class=\"p-6 ".concat(read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n    <div class=\"flex\">\n      <div class=\"flex-auto\">\n        <a href=\"#/show/").concat(id, "\">").concat(title, "</a>  \n      </div>\n      <div class=\"text-center text-sm\">\n        <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(comments_count, "</div>\n      </div>\n    </div>\n    <div class=\"flex mt-3\">\n      <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n        <div><i class=\"fas fa-user mr-1\"></i>").concat(user, "</div>\n        <div><i class=\"fas fa-heart mr-1\"></i>").concat(points, "</div>\n        <div><i class=\"far fa-clock mr-1\"></i>").concat(time_ago, "</div>\n      </div>  \n    </div>\n  </div>    \n      "));
       }
 
       _this.setTemplateData('news_feed', _this.getHtml());
@@ -552,11 +583,6 @@ function (_super) {
 
     _this.store = store;
     _this.api = new api_1.NewsFeedApi(config_1.NEWS_URL);
-
-    if (!_this.store.hasFeeds) {
-      _this.store.setFeeds(_this.api.getData());
-    }
-
     return _this;
   }
 
@@ -754,7 +780,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64704" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59433" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
